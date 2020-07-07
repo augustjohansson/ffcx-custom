@@ -90,24 +90,34 @@ class FFCXBackendDefinitions(object):
 
         assert begin < end
 
+        dofmap = tabledata.dofmap
+
+        # TODO: this should be done in ir, not here!
+        import ufl
+        if isinstance(mt.terminal.ufl_element(), ufl.VectorElement):
+            block_size = tabledata.original_dim // (end - begin)
+            start = begin // (end - begin)
+            dofmap = tuple(start + (i - begin) * block_size for i in dofmap)
+
         # Get access to element table
         FE = self.symbols.element_table(tabledata, self.entitytype, mt.restriction)
 
-        unroll = len(tabledata.dofmap) != end - begin
-        # unroll = True
+        unroll = len(dofmap) != end - begin
+        unroll = True
         if unroll:
             # TODO: Could also use a generated constant dofmap here like in block code
             # Unrolled loop to accumulate linear combination of dofs and tables
             values = [
                 self.symbols.coefficient_dof_access(mt.terminal, idof) * FE[i]
-                for i, idof in enumerate(tabledata.dofmap)
+                for i, idof in enumerate(dofmap)
             ]
             value = L.Sum(values)
             code = [L.VariableDecl("const ufc_scalar_t", access, value)]
         else:
             # Loop to accumulate linear combination of dofs and tables
             ic = self.symbols.coefficient_dof_sum_index()
-            dof_access = self.symbols.coefficient_dof_access(mt.terminal, ic + begin)
+            # dof_access = self.symbols.coefficient_dof_access(mt.terminal, ic + begin)
+            dof_access = self.symbols.coefficient_dof_access(mt.terminal, ic)
             code = [
                 L.VariableDecl("ufc_scalar_t", access, 0.0),
                 L.ForRange(ic, 0, end - begin, body=[L.AssignAdd(access, dof_access * FE[ic])])

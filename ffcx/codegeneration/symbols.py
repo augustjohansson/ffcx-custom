@@ -67,6 +67,7 @@ class FFCXBackendSymbols(object):
         # Coordinate dofs for each component are interleaved? Must match dolfinx.
         # True = XYZXYZXYZXYZ, False = XXXXYYYYZZZZ
         self.interleaved_components = True
+        self.interleaved_vector_element_components = True
 
     def element_tensor(self):
         """Symbol for the element tensor itself."""
@@ -177,6 +178,8 @@ class FFCXBackendSymbols(object):
         if restriction == "-":
             offset = num_scalar_dofs * gdim
         vc = self.S("coordinate_dofs")
+
+        # TODO: duplicate this in coefficient_dof_access
         if self.interleaved_components:
             return vc[gdim * dof + component + offset]
         else:
@@ -189,10 +192,15 @@ class FFCXBackendSymbols(object):
             for component in range(gdim) for dof in range(num_scalar_dofs)
         ]
 
-    def coefficient_dof_access(self, coefficient, dof_number):
+    def coefficient_dof_access(self, coefficient, dof_number, block_size):
         # TODO: Add domain number?
+        # from IPython import embed; embed()
         offset = self.coefficient_offsets[coefficient]
         w = self.S("w")
+        if self.interleaved_vector_element_components:
+            return vc[gdim * dof + component + offset]
+        else:
+            return vc[num_scalar_dofs * component + dof + offset]
         return w[offset + dof_number]
 
     def coefficient_value(self, mt):
