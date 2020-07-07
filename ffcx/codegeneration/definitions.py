@@ -90,26 +90,22 @@ class FFCXBackendDefinitions(object):
 
         assert begin < end
 
-        dofmap = tabledata.dofmap
-
-        # TODO: this should be done in ir, not here!
-        import ufl
-        if isinstance(mt.terminal.ufl_element(), ufl.VectorElement):
-            block_size = tabledata.original_dim // (end - begin)
-            start = begin // (end - begin)
-            dofmap = tuple(start + (i - begin) * block_size for i in dofmap)
+        block_size = tabledata.dof_block_size
+        scalar_dim = tabledata.original_dim // block_size
+        block = begin // scalar_dim
 
         # Get access to element table
         FE = self.symbols.element_table(tabledata, self.entitytype, mt.restriction)
 
-        unroll = len(dofmap) != end - begin
-        unroll = True
+        unroll = len(tabledata.dofmap) != end - begin
+
         if unroll:
             # TODO: Could also use a generated constant dofmap here like in block code
             # Unrolled loop to accumulate linear combination of dofs and tables
             values = [
-                self.symbols.coefficient_dof_access(mt.terminal, idof) * FE[i]
-                for i, idof in enumerate(dofmap)
+                self.symbols.coefficient_dof_access(
+                    mt.terminal, idof - block * scalar_dim, block_size, block, end - begin) * FE[i]
+                for i, idof in enumerate(tabledata.dofmap)
             ]
             value = L.Sum(values)
             code = [L.VariableDecl("const ufc_scalar_t", access, value)]
@@ -117,7 +113,8 @@ class FFCXBackendDefinitions(object):
             # Loop to accumulate linear combination of dofs and tables
             ic = self.symbols.coefficient_dof_sum_index()
             # dof_access = self.symbols.coefficient_dof_access(mt.terminal, ic + begin)
-            dof_access = self.symbols.coefficient_dof_access(mt.terminal, ic)
+            dof_access = self.symbols.coefficient_dof_access(
+                mt.terminal, ic, block, block_size, tabledata.original_dim)
             code = [
                 L.VariableDecl("ufc_scalar_t", access, 0.0),
                 L.ForRange(ic, 0, end - begin, body=[L.AssignAdd(access, dof_access * FE[ic])])

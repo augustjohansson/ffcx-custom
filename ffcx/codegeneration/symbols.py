@@ -192,16 +192,15 @@ class FFCXBackendSymbols(object):
             for component in range(gdim) for dof in range(num_scalar_dofs)
         ]
 
-    def coefficient_dof_access(self, coefficient, dof_number, block_size):
+    def coefficient_dof_access(self, coefficient, dof, block, block_size, num_scalar_dofs):
         # TODO: Add domain number?
         # from IPython import embed; embed()
         offset = self.coefficient_offsets[coefficient]
         w = self.S("w")
         if self.interleaved_vector_element_components:
-            return vc[gdim * dof + component + offset]
+            return w[block_size * dof + block + offset]
         else:
-            return vc[num_scalar_dofs * component + dof + offset]
-        return w[offset + dof_number]
+            return w[num_scalar_dofs * block + dof + offset]
 
     def coefficient_value(self, mt):
         """Symbol for variable holding value or derivative component of coefficient."""

@@ -34,7 +34,7 @@ valid_ttypes = set(("quadrature", )) | set(piecewise_ttypes) | set(uniform_ttype
 unique_table_reference_t = collections.namedtuple(
     "unique_table_reference",
     ["name", "values", "dofrange", "dofmap", "original_dim", "ttype", "is_piecewise", "is_uniform",
-     "is_permuted"])
+     "is_permuted", "dof_block_size"])
 
 
 # TODO: Get restriction postfix from somewhere central
@@ -731,6 +731,10 @@ def build_optimized_tables(quadrature_rule,
         # Some more metadata stored under the ename
         ttype = unique_table_ttypes[ename]
 
+        block_size = 1
+        if isinstance(table_origins[ename][0], ufl.VectorElement):
+            block_size = len(table_origins[ename][0].sub_elements())
+
         # Add offset to dofmap and dofrange for restricted terminals
         if mt.restriction and isinstance(mt.terminal, ufl.classes.FormArgument):
             # offset = 0 or number of dofs before table optimization
@@ -742,6 +746,7 @@ def build_optimized_tables(quadrature_rule,
         # Store reference to unique table for this mt
         mt_unique_table_reference[mt] = unique_table_reference_t(
             ename, unique_tables[ename], dofrange, dofmap, original_dim, ttype,
-            ttype in piecewise_ttypes, ttype in uniform_ttypes, is_permuted)
+            ttype in piecewise_ttypes, ttype in uniform_ttypes, is_permuted,
+            block_size)
 
     return unique_tables, unique_table_ttypes, unique_table_num_dofs, mt_unique_table_reference, table_origins
