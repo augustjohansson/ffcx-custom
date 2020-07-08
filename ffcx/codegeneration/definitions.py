@@ -91,13 +91,17 @@ class FFCXBackendDefinitions(object):
         # Get access to element table
         FE = self.symbols.element_table(tabledata, self.entitytype, mt.restriction)
 
+#        from IPython import embed; embed()
+
+        block_size = len(mt.terminal.ufl_element().sub_elements())
+
         unroll = len(tabledata.dofmap) != end - begin
         # unroll = True
         if unroll:
             # TODO: Could also use a generated constant dofmap here like in block code
             # Unrolled loop to accumulate linear combination of dofs and tables
             values = [
-                self.symbols.coefficient_dof_access(mt.terminal, idof) * FE[i]
+                self.symbols.coefficient_dof_access(mt.terminal, idof, mt.component[0], block_size) * FE[i]
                 for i, idof in enumerate(tabledata.dofmap)
             ]
             value = L.Sum(values)
@@ -105,7 +109,7 @@ class FFCXBackendDefinitions(object):
         else:
             # Loop to accumulate linear combination of dofs and tables
             ic = self.symbols.coefficient_dof_sum_index()
-            dof_access = self.symbols.coefficient_dof_access(mt.terminal, ic + begin)
+            dof_access = self.symbols.coefficient_dof_access(mt.terminal, ic + begin, mt.component[0], block_size)
             code = [
                 L.VariableDecl("ufc_scalar_t", access, 0.0),
                 L.ForRange(ic, 0, end - begin, body=[L.AssignAdd(access, dof_access * FE[ic])])
@@ -142,8 +146,9 @@ class FFCXBackendDefinitions(object):
         FE = self.symbols.element_table(tabledata, self.entitytype, mt.restriction)
 
         # Inlined version (we know this is bounded by a small number)
-        from IPython import embed; embed()
-        dof_access = self.symbols.domain_dofs_access(gdim, num_scalar_dofs, mt.restriction)
+#        from IPython import embed; embed()
+        dof_access = self.symbols.domain_dofs_access(gdim, num_scalar_dofs, mt.restriction,
+                                                     mt.component[0])
         value = L.Sum([dof_access[idof] * FE[i] for i, idof in enumerate(tabledata.dofmap)])
         code = [L.VariableDecl("const double", access, value)]
 

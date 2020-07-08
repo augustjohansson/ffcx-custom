@@ -171,29 +171,29 @@ class FFCXBackendSymbols(object):
         # FIXME: Add domain number!
         return self.S(format_mt_name("J", mt))
 
-    def domain_dof_access(self, dof, component, gdim, num_scalar_dofs, restriction):
+    def domain_dof_access(self, dof, component, gdim, num_scalar_dofs, restriction, block_offset):
         # FIXME: Add domain number or offset!
-        offset = 0
+        offset = block_offset
         if restriction == "-":
-            offset = num_scalar_dofs * gdim
+            offset = num_scalar_dofs * gdim + block_offset
         vc = self.S("coordinate_dofs")
         if self.interleaved_components:
             return vc[gdim * dof + component + offset]
         else:
             return vc[num_scalar_dofs * component + dof + offset]
 
-    def domain_dofs_access(self, gdim, num_scalar_dofs, restriction):
+    def domain_dofs_access(self, gdim, num_scalar_dofs, restriction, block_offset):
         # FIXME: Add domain number or offset!
         return [
-            self.domain_dof_access(dof, component, gdim, num_scalar_dofs, restriction)
+            self.domain_dof_access(dof, component, gdim, num_scalar_dofs, restriction, block_offset)
             for component in range(gdim) for dof in range(num_scalar_dofs)
         ]
 
-    def coefficient_dof_access(self, coefficient, dof_number):
+    def coefficient_dof_access(self, coefficient, dof_number, block_offset, scalar_dim):
         # TODO: Add domain number?
-        offset = self.coefficient_offsets[coefficient]
+        offset = self.coefficient_offsets[coefficient] + block_offset
         w = self.S("w")
-        return w[offset + dof_number]
+        return w[offset + dof_number * scalar_dim]
 
     def coefficient_value(self, mt):
         """Symbol for variable holding value or derivative component of coefficient."""
