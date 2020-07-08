@@ -6,7 +6,6 @@
 
 import functools
 import logging
-import types
 
 import numpy
 
