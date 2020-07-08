@@ -102,6 +102,8 @@ def _create_mixed_finiteelement(element: ufl.MixedElement) -> FIAT.MixedElement:
 
 @_create_element.register(ufl.VectorElement)
 def _create_vector_finiteelement(element: ufl.VectorElement) -> FIAT.MixedElement:
+    return create_element(element.sub_elements()[0])
+
     elements = []
 
     def rextract(els):
@@ -128,6 +130,7 @@ def _create_vector_finiteelement(element: ufl.VectorElement) -> FIAT.MixedElemen
                 for entity, e_dofs in dofs.items()
             } for dim, dofs in entity_dofs.items()
         }
+
 
     # Reorder from XXYYZZ to XYZXYZ
     block_size = element.num_sub_elements()

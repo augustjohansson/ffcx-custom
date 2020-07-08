@@ -299,6 +299,7 @@ def _generate_multiple_points_body(L, i, dof, mapping, gdim, tdim, offset=0):
 
     # Generate loop over r and add to code.
     code += [L.ForRange(r, 0, n, index_type=index_type, body=lines_r)]
+
     return (code, result)
 
 

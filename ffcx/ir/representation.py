@@ -170,12 +170,21 @@ def _compute_element_ir(ufl_element, element_numbers, finite_element_names, epsi
 
     # Compute data for each function
     ir["signature"] = repr(ufl_element)
+
+    ir["value_shape"] = ufl_element.value_shape()
+
+    # Store block_size
+    block_size = 1
+    if isinstance(ufl_element, ufl.VectorElement):
+        block_size = ufl_element.num_sub_elements()
+        ufl_element = ufl_element.sub_elements()[0]
+    ir["block_size"] = block_size
+
     ir["cell_shape"] = cellname
     ir["topological_dimension"] = cell.topological_dimension()
     ir["geometric_dimension"] = cell.geometric_dimension()
-    ir["space_dimension"] = fiat_element.space_dimension()
-    ir["value_shape"] = ufl_element.value_shape()
     ir["reference_value_shape"] = ufl_element.reference_value_shape()
+    ir["space_dimension"] = fiat_element.space_dimension() * block_size
 
     ir["degree"] = ufl_element.degree()
     ir["family"] = ufl_element.family()
@@ -184,11 +193,6 @@ def _compute_element_ir(ufl_element, element_numbers, finite_element_names, epsi
     ir["evaluate_dof"] = _evaluate_dof(ufl_element, fiat_element)
     ir["tabulate_dof_coordinates"] = _tabulate_dof_coordinates(ufl_element, fiat_element)
     ir["num_sub_elements"] = ufl_element.num_sub_elements()
-
-    block_size = 1
-    if isinstance(ufl_element, ufl.VectorElement):
-        block_size = ufl_element.num_sub_elements()
-    ir["block_size"] = block_size
 
     ir["create_sub_element"] = [finite_element_names[e] for e in ufl_element.sub_elements()]
 
@@ -807,15 +811,11 @@ def _evaluate_basis(ufl_element, fiat_element, epsilon):
     cell = ufl_element.cell()
     cellname = cell.cellname()
 
-    if isinstance(ufl_element, ufl.VectorElement):
-        # If VectorElement, each element in the MixedElement is the same
-        return _evaluate_basis(ufl_element.sub_elements()[0], fiat_element.elements()[0], epsilon)
-    else:
-        # Handle Mixed and EnrichedElements by extracting 'sub' elements.
-        elements = _extract_elements(fiat_element)
-        physical_offsets = _generate_physical_offsets(ufl_element)
-        reference_offsets = _generate_reference_offsets(fiat_element)
-        mappings = fiat_element.mapping()
+    # Handle Mixed and EnrichedElements by extracting 'sub' elements.
+    elements = _extract_elements(fiat_element)
+    physical_offsets = _generate_physical_offsets(ufl_element)
+    reference_offsets = _generate_reference_offsets(fiat_element)
+    mappings = fiat_element.mapping()
 
     # This function is evidently not implemented for TensorElements
     for e in elements:
@@ -962,9 +962,6 @@ def _tabulate_dof_coordinates(ufl_element, element):
     # nodal), this is strictly not necessary but simpler
     if any(L is None for L in element.dual_basis()):
         return {}
-
-    if isinstance(ufl_element, ufl.VectorElement):
-        element = element.elements()[0]
 
     cell = ufl_element.cell()
     return ir_tabulate_dof_coordinates(

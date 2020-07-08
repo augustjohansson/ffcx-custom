@@ -170,6 +170,8 @@ def get_ffcx_table_values(points, cell, integral_type, ufl_element, avg, entityt
     # Extract arrays for the right scalar component
     component_tables = []
     sh = ufl_element.value_shape()
+    if isinstance(ufl_element, ufl.VectorElement):
+        sh = ufl_element.sub_elements()[0].value_shape()
     if sh == ():
         # Scalar valued element
         for entity in range(num_entities):

@@ -18,10 +18,8 @@ def num_coordinate_component_dofs(coordinate_element):
     """Get the number of dofs for a coordinate component for this degree.
 
     """
-    fiat_elements = create_element(coordinate_element).elements()
+    fiat_element = create_element(coordinate_element)
     # Extracting only first component degrees of freedom from FIAT
-    fiat_element = fiat_elements[0]
-    assert(all(isinstance(element, type(fiat_element)) for element in fiat_elements))
     return fiat_element.space_dimension()
 
 
@@ -144,6 +142,7 @@ class FFCXBackendDefinitions(object):
         FE = self.symbols.element_table(tabledata, self.entitytype, mt.restriction)
 
         # Inlined version (we know this is bounded by a small number)
+        from IPython import embed; embed()
         dof_access = self.symbols.domain_dofs_access(gdim, num_scalar_dofs, mt.restriction)
         value = L.Sum([dof_access[idof] * FE[i] for i, idof in enumerate(tabledata.dofmap)])
         code = [L.VariableDecl("const double", access, value)]
