@@ -92,7 +92,9 @@ class FFCXBackendDefinitions(object):
 
         block_size = tabledata.dof_block_size
         scalar_dim = tabledata.original_dim // block_size
-        block = begin // scalar_dim
+
+        offset = begin // tabledata.original_dim * tabledata.original_dim
+        block = (begin - offset) // scalar_dim
 
         # Get access to element table
         FE = self.symbols.element_table(tabledata, self.entitytype, mt.restriction)
@@ -104,7 +106,7 @@ class FFCXBackendDefinitions(object):
             # Unrolled loop to accumulate linear combination of dofs and tables
             values = [
                 self.symbols.coefficient_dof_access(
-                    mt.terminal, idof - block * scalar_dim, block_size, block, end - begin) * FE[i]
+                    mt.terminal, idof - block * scalar_dim, block, block_size, tabledata.original_dim, offset) * FE[i]
                 for i, idof in enumerate(tabledata.dofmap)
             ]
             value = L.Sum(values)
@@ -114,7 +116,7 @@ class FFCXBackendDefinitions(object):
             ic = self.symbols.coefficient_dof_sum_index()
             # dof_access = self.symbols.coefficient_dof_access(mt.terminal, ic + begin)
             dof_access = self.symbols.coefficient_dof_access(
-                mt.terminal, ic, block, block_size, tabledata.original_dim)
+                mt.terminal, ic, block, block_size, tabledata.original_dim, offset)
             code = [
                 L.VariableDecl("ufc_scalar_t", access, 0.0),
                 L.ForRange(ic, 0, end - begin, body=[L.AssignAdd(access, dof_access * FE[ic])])
