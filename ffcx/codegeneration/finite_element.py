@@ -461,6 +461,12 @@ def generator(ir, parameters):
     d["sub_element_declaration"] = sub_element_declaration(L, ir)
     d["create_sub_element"] = statements
 
+    if ir.needs_permutation_data:
+        d["needs_permutation_data"] = 1
+    else:
+        d["needs_permutation_data"] = 0
+
+
     # Check that no keys are redundant or have been missed
     from string import Formatter
     fieldnames = [

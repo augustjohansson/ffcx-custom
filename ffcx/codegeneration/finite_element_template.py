@@ -87,6 +87,7 @@ ufc_finite_element* create_{factory_name}(void)
   element->transform_values = transform_values_{factory_name};
   element->tabulate_reference_dof_coordinates = tabulate_reference_dof_coordinates_{factory_name};
   element->num_sub_elements = {num_sub_elements};
+  element->needs_permutation_data = {needs_permutation_data};
   element->create_sub_element = create_sub_element_{factory_name};
   element->create = create_{factory_name};
 

@@ -56,7 +56,7 @@ ir_element = namedtuple('ir_element', ['id', 'name', 'signature', 'cell_shape',
                                        'geometric_dimension', 'space_dimension', 'value_shape',
                                        'reference_value_shape', 'degree', 'family', 'evaluate_basis',
                                        'evaluate_dof', 'tabulate_dof_coordinates', 'num_sub_elements',
-                                       'base_permutations', 'dof_reflection_entities',
+                                       'needs_permutation_data', 'base_permutations', 'dof_reflection_entities',
                                        'create_sub_element', 'dof_types', 'entity_dofs'])
 ir_dofmap = namedtuple('ir_dofmap', ['id', 'name', 'signature', 'num_global_support_dofs',
                                      'num_element_support_dofs', 'num_entity_dofs',
@@ -188,6 +188,12 @@ def _compute_element_ir(ufl_element, element_numbers, finite_element_names, epsi
 
     ir["base_permutations"] = dof_permutations.base_permutations(ufl_element)
     ir["dof_reflection_entities"] = dof_permutations.reflection_entities(ufl_element)
+
+    ir["needs_permutation_data"] = False
+    for p in ir["base_permutations"][1:]:
+        if p != ir["base_permutations"][0]:
+            ir["needs_permutation_data"] = True
+            break
 
     ir["dof_types"] = [i.functional_type for i in fiat_element.dual_basis()]
     ir["entity_dofs"] = fiat_element.entity_dofs()

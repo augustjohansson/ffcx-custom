@@ -113,6 +113,9 @@ extern "C"
     /// function space
     int degree;
 
+    /// Does this space need entity permutation data passed in?
+    bool needs_permutation_data;
+
     /// Return the family of the finite element function space
     const char* family;
 
