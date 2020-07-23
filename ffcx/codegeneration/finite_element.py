@@ -466,7 +466,6 @@ def generator(ir, parameters):
     else:
         d["needs_permutation_data"] = 0
 
-
     # Check that no keys are redundant or have been missed
     from string import Formatter
     fieldnames = [

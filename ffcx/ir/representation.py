@@ -203,7 +203,7 @@ def needs_permutation_data(base_permutations, dof_reflections, dof_rotations):
     for p in base_permutations[1:]:
         if p != base_permutations[0]:
             return True
-    for e in reflections:
+    for e in dof_reflections:
         if e is not None:
             return True
     if len(dof_rotations) > 0:
