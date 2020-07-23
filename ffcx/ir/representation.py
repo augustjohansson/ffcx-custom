@@ -189,16 +189,26 @@ def _compute_element_ir(ufl_element, element_numbers, finite_element_names, epsi
     ir["base_permutations"] = dof_permutations.base_permutations(ufl_element)
     ir["dof_reflection_entities"] = dof_permutations.reflection_entities(ufl_element)
 
-    ir["needs_permutation_data"] = False
-    for p in ir["base_permutations"][1:]:
-        if p != ir["base_permutations"][0]:
-            ir["needs_permutation_data"] = True
-            break
+    ir["needs_permutation_data"] = needs_permutation_data(
+        ir["base_permutations"], ir["dof_reflection_entities"],
+        dof_permutations.face_tangents(ufl_element))
 
     ir["dof_types"] = [i.functional_type for i in fiat_element.dual_basis()]
     ir["entity_dofs"] = fiat_element.entity_dofs()
 
     return ir_element(**ir)
+
+
+def needs_permutation_data(base_permutations, dof_reflections, dof_rotations):
+    for p in base_permutations[1:]:
+        if p != base_permutations[0]:
+            return True
+    for e in reflections:
+        if e is not None:
+            return True
+    if len(dof_rotations) > 0:
+        return True
+    return False
 
 
 def _compute_dofmap_ir(ufl_element, element_numbers, dofmap_names):
