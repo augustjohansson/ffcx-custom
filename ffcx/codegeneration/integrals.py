@@ -242,23 +242,21 @@ class IntegralGenerator(object):
 
         # Loop over quadrature rules
         if self.ir.integral_type == "runtime":
+            # For debugging, include also the non-runtime wsym
             assert len(self.ir.integrand.items()) == 1
             for quadrature_rule, integrand in self.ir.integrand.items():
                 # Use the same wsym
                 wsym = self.backend.symbols.weights_table(quadrature_rule)
                 qrwsym = self.backend.symbols.runtime_quadrature_weights()
                 parts += [L.VariableDecl("const double*", wsym, qrwsym)]
-
         else:
-            pass
+            for quadrature_rule, integrand in self.ir.integrand.items():
+                num_points = quadrature_rule.weights.shape[0]
 
-        for quadrature_rule, integrand in self.ir.integrand.items():
-            num_points = quadrature_rule.weights.shape[0]
-
-            # Generate quadrature weights array
-            wsym = self.backend.symbols.weights_table(quadrature_rule)
-            parts += [L.ArrayDecl(f"static const {value_type}", wsym, num_points,
-                                  quadrature_rule.weights, padlen=padlen)]
+                # Generate quadrature weights array
+                wsym = self.backend.symbols.weights_table(quadrature_rule)
+                parts += [L.ArrayDecl(f"static const {value_type}", wsym, num_points,
+                                      quadrature_rule.weights, padlen=padlen)]
 
         # Add leading comment if there are any tables
         parts = L.commented_code_list(parts, "Quadrature rules")
@@ -310,15 +308,13 @@ class IntegralGenerator(object):
             table_names = sorted(tables)
 
         if self.ir.integral_type == "runtime":
-            # Only declare
+            # Only declare  (for debugging include both runtime and non-runtime)
             for name in table_names:
                 parts += [L.VerbatimStatement(f"{float_type}**** {name};")]
         else:
-            pass
-
-        for name in table_names:
-            table = tables[name]
-            parts += self.declare_table(name, table, padlen, float_type)
+            for name in table_names:
+                table = tables[name]
+                parts += self.declare_table(name, table, padlen, float_type)
 
         # Call basix
         if self.ir.integral_type == "runtime":
