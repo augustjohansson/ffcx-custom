@@ -238,6 +238,11 @@ def _analyze_form(form: ufl.form.Form, options: typing.Dict) -> ufl.algorithms.f
 
             integral_data.integrals[i] = integral.reconstruct(metadata=metadata)
 
+            # Set integral_type to custom if quadrature_rule is
+            # runtime since the custom type already exists in ffc
+            if metadata["quadrature_rule"] == "runtime":
+                integral_data.integral_type = "custom"
+
     return form_data
 
 

@@ -78,6 +78,11 @@ logger = logging.getLogger("ffcx")
 def _print_timing(stage: int, timing: float):
     logger.info(f"Compiler stage {stage} finished in {timing:.4f} seconds.")
 
+def _has_runtime_qr(ir):
+    for integral in ir.integrals:
+        if integral.integral_type is "custom":
+            return True
+    return False
 
 def compile_ufl_objects(ufl_objects: typing.List[typing.Any],
                         object_names: typing.Dict = {},
@@ -108,8 +113,9 @@ def compile_ufl_objects(ufl_objects: typing.List[typing.Any],
     _print_timing(3, time() - cpu_time)
 
     # Stage 4: format code
+    has_runtime_qr = _has_runtime_qr(ir)
     cpu_time = time()
-    code_h, code_c = format_code(code, options)
+    code_h, code_c = format_code(code, options, has_runtime_qr)
     _print_timing(4, time() - cpu_time)
 
     return code_h, code_c

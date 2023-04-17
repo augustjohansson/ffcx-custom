@@ -89,6 +89,18 @@ class FFCXBackendSymbols(object):
         else:
             logging.exception(f"Unknown entitytype {entitytype}")
 
+    def num_custom_quadrature_points(self):
+        """Number of quadrature points, argument to custom integrals."""
+        return self.S("num_quadrature_points")
+
+    def custom_quadrature_weights(self):
+        """Quadrature weights including cell measure scaling, argument to custom integrals."""
+        return self.S("quadrature_weights")
+
+    def custom_quadrature_points(self):
+        """Physical quadrature points, argument to custom integrals."""
+        return self.S("quadrature_points")
+
     def argument_loop_index(self, iarg):
         """Loop index for argument #iarg."""
         indices = ["i", "j", "k", "l"]

@@ -199,7 +199,7 @@ def compute_ir(analysis: UFLData, object_names, prefix, options, visualise):
 
     irs = [
         _compute_integral_ir(fd, i, analysis.element_numbers, integral_names, finite_element_names,
-                             options, visualise)
+                             options, visualise, ir_elements)
         for (i, fd) in enumerate(analysis.form_data)
     ]
     ir_integrals = list(itertools.chain(*irs))
@@ -328,7 +328,7 @@ def _compute_dofmap_ir(element, element_numbers, dofmap_names):
 
 
 def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
-                         finite_element_names, options, visualise):
+                         finite_element_names, options, visualise, ir_elements):
     """Compute intermediate representation for form integrals."""
     _entity_types = {
         "cell": "cell",
@@ -399,6 +399,15 @@ def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
             if scheme == "custom":
                 points = md["quadrature_points"]
                 weights = md["quadrature_weights"]
+
+            elif scheme == "runtime":
+                # Dummy quadrature
+                # points = numpy.array([[123.456, 123.456]])
+                # weights = numpy.array([123.456])
+                points = numpy.array([[123.456, 123.456], [123.456, 123.456]])
+                weights = numpy.array([123.456, 123.456])
+
+
             elif scheme == "vertex":
                 # FIXME: Could this come from basix?
 

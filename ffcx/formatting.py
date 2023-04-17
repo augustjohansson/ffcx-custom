@@ -58,7 +58,7 @@ c_extern_post = """
 """
 
 
-def format_code(code, options: dict):
+def format_code(code, options: dict, has_runtime_qr: bool):
     """Format given code in UFC format. Returns two strings with header and source file contents."""
     logger.info(79 * "*")
     logger.info("Compiler stage 5: Formatting code")
@@ -73,7 +73,7 @@ def format_code(code, options: dict):
     code_c_pre += FORMAT_TEMPLATE["header_c"]
 
     # Generate includes and add to preamble
-    includes_h, includes_c = _generate_includes(options)
+    includes_h, includes_c = _generate_includes(options, has_runtime_qr)
     code_h_pre += includes_h
     code_c_pre += includes_c
 
@@ -122,7 +122,7 @@ def _generate_comment(options):
     return comment
 
 
-def _generate_includes(options: dict):
+def _generate_includes(options: dict, has_runtime_qr: bool):
 
     default_h_includes = [
         "#include <ufcx.h>",
@@ -135,6 +135,9 @@ def _generate_includes(options: dict):
         "#include <string.h>",  # This should really be set by the backend
         "#include <ufcx.h>"
     ]
+
+    if has_runtime_qr:
+        default_c_includes += ["#include <call_basix.h>"]
 
     if "_Complex" in options["scalar_type"]:
         default_c_includes += ["#include <complex.h>"]

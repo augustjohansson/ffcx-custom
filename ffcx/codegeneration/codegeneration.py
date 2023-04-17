@@ -47,7 +47,7 @@ def generate_code(ir, options) -> CodeBlocks:
     # Generate code for finite_elements
     code_finite_elements = [finite_element_generator(element_ir, options) for element_ir in ir.elements]
     code_dofmaps = [dofmap_generator(dofmap_ir, options) for dofmap_ir in ir.dofmaps]
-    code_integrals = [integral_generator(integral_ir, options) for integral_ir in ir.integrals]
+    code_integrals = [integral_generator(integral_ir, options, ir.elements) for integral_ir in ir.integrals]
     code_forms = [form_generator(form_ir, options) for form_ir in ir.forms]
     code_expressions = [expression_generator(expression_ir, options) for expression_ir in ir.expressions]
     return CodeBlocks(elements=code_finite_elements, dofmaps=code_dofmaps,
