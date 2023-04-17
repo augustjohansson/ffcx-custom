@@ -80,7 +80,7 @@ def _print_timing(stage: int, timing: float):
 
 def _has_runtime_qr(ir):
     for integral in ir.integrals:
-        if integral.integral_type is "custom":
+        if integral.integral_type is "runtime":
             return True
     return False
 

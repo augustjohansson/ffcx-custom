@@ -232,31 +232,33 @@ class IntegralGenerator(object):
 
         parts: List[str] = []
 
-        # # No quadrature tables for custom (given argument) or point
-        # # (evaluation in single vertex)
-        # skip = ufl.custom_integral_types + ufl.measure.point_integral_types
-        # if self.ir.integral_type in skip:
-        #     return parts
+        # No quadrature tables for custom (given argument) or point
+        # (evaluation in single vertex)
+        skip = ufl.custom_integral_types + ufl.measure.point_integral_types
+        if self.ir.integral_type in skip:
+            return parts
 
         padlen = self.ir.options["padlen"]
 
         # Loop over quadrature rules
-        if self.ir.integral_type == "custom":
+        if self.ir.integral_type == "runtime":
             assert len(self.ir.integrand.items()) == 1
             for quadrature_rule, integrand in self.ir.integrand.items():
                 # Use the same wsym
                 wsym = self.backend.symbols.weights_table(quadrature_rule)
-                qrwsym = self.backend.symbols.custom_quadrature_weights()
+                qrwsym = self.backend.symbols.runtime_quadrature_weights()
                 parts += [L.VariableDecl("const double*", wsym, qrwsym)]
 
         else:
-            for quadrature_rule, integrand in self.ir.integrand.items():
-                num_points = quadrature_rule.weights.shape[0]
+            pass
 
-                # Generate quadrature weights array
-                wsym = self.backend.symbols.weights_table(quadrature_rule)
-                parts += [L.ArrayDecl(f"static const {value_type}", wsym, num_points,
-                                      quadrature_rule.weights, padlen=padlen)]
+        for quadrature_rule, integrand in self.ir.integrand.items():
+            num_points = quadrature_rule.weights.shape[0]
+
+            # Generate quadrature weights array
+            wsym = self.backend.symbols.weights_table(quadrature_rule)
+            parts += [L.ArrayDecl(f"static const {value_type}", wsym, num_points,
+                                  quadrature_rule.weights, padlen=padlen)]
 
         # Add leading comment if there are any tables
         parts = L.commented_code_list(parts, "Quadrature rules")
@@ -307,17 +309,19 @@ class IntegralGenerator(object):
             # Define all tables
             table_names = sorted(tables)
 
-        if self.ir.integral_type == "custom":
+        if self.ir.integral_type == "runtime":
             # Only declare
             for name in table_names:
                 parts += [L.VerbatimStatement(f"{float_type}**** {name};")]
         else:
-            for name in table_names:
-                table = tables[name]
-                parts += self.declare_table(name, table, padlen, float_type)
+            pass
+
+        for name in table_names:
+            table = tables[name]
+            parts += self.declare_table(name, table, padlen, float_type)
 
         # Call basix
-        if self.ir.integral_type == "custom":
+        if self.ir.integral_type == "runtime":
             # Comment
             parts += [L.VerbatimStatement("// Compute basis and/or derivatives using basix")]
 
@@ -386,8 +390,11 @@ class IntegralGenerator(object):
         else:
             num_points = quadrature_rule.points.shape[0]
             iq = self.backend.symbols.quadrature_loop_index()
-            quadparts = [L.ForRange(iq, 0, num_points, body=body)]
-
+            if self.ir.integral_type == "runtime":
+                # FIXME This requires removal of RuntimeError in cnodes
+                quadparts = [L.ForRange(iq, 0, "num_quadrature_points", body=body)]
+            else:
+                quadparts = [L.ForRange(iq, 0, num_points, body=body)]
         return pre_definitions, preparts, quadparts
 
     def generate_piecewise_partition(self, quadrature_rule):
@@ -621,12 +628,12 @@ class IntegralGenerator(object):
 
             # FIXME
             # Quadrature weight was removed in representation, add it back now
-            # if self.ir.integral_type in ufl.custom_integral_types:
-            #     weights = self.backend.symbols.custom_weights_table()
-            #     weight = weights[iq]
-            # else:
-            weights = self.backend.symbols.weights_table(quadrature_rule)
-            weight = weights[iq]
+            if self.ir.integral_type in ufl.custom_integral_types:
+                weights = self.backend.symbols.custom_weights_table()
+                weight = weights[iq]
+            else:
+                weights = self.backend.symbols.weights_table(quadrature_rule)
+                weight = weights[iq]
 
             # Define fw = f * weight
             fw_rhs = L.float_product([f, weight])

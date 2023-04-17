@@ -335,7 +335,8 @@ def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
         "exterior_facet": "facet",
         "interior_facet": "facet",
         "vertex": "vertex",
-        "custom": "cell"
+        "custom": "cell",
+        "runtime": "cell"
     }
 
     # Iterate over groups of integrals
@@ -404,8 +405,11 @@ def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
                 # Dummy quadrature
                 # points = numpy.array([[123.456, 123.456]])
                 # weights = numpy.array([123.456])
-                points = numpy.array([[123.456, 123.456], [123.456, 123.456]])
-                weights = numpy.array([123.456, 123.456])
+                # points = numpy.array([[123.456, 123.456], [123.456, 123.456]])
+                # weights = numpy.array([123.456, 123.456])
+                degree = md["quadrature_degree"]
+                points, weights = create_quadrature_points_and_weights(
+                    integral_type, cell, degree, scheme)
 
 
             elif scheme == "vertex":

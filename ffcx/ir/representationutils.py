@@ -48,6 +48,8 @@ def create_quadrature_points_and_weights(integral_type, cell, degree, rule):
     """Create quadrature rule and return points and weights."""
     if integral_type == "cell":
         return create_quadrature(cell.cellname(), degree, rule)
+    elif integral_type == "runtime":
+        return create_quadrature(cell.cellname(), degree, "default")
     elif integral_type in ufl.measure.facet_integral_types:
         facet_types = cell.facet_types()
         # Raise exception for cells with more than one facet type e.g. prisms
@@ -65,7 +67,7 @@ def create_quadrature_points_and_weights(integral_type, cell, degree, rule):
 
 def integral_type_to_entity_dim(integral_type, tdim):
     """Given integral_type and domain tdim, return the tdim of the integration entity."""
-    if integral_type == "cell":
+    if integral_type == "cell" or integral_type == "runtime":
         entity_dim = tdim
     elif integral_type in ufl.measure.facet_integral_types:
         entity_dim = tdim - 1

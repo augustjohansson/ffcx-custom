@@ -934,7 +934,8 @@ def as_cexpr(node):
     elif isinstance(node, numbers.Real):
         return LiteralFloat(node)
     elif isinstance(node, str):
-        raise RuntimeError("Got string for CExpr, this is ambiguous: %s" % (node, ))
+        #raise RuntimeError("Got string for CExpr, this is ambiguous: %s" % (node, ))
+        return as_cexpr_or_string_symbol(node)
     else:
         raise RuntimeError("Unexpected CExpr type %s:\n%s" % (type(node), str(node)))
 
