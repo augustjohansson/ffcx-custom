@@ -22,7 +22,7 @@ from ffcx.naming import cdtype_to_numpy, scalar_to_value_type
 logger = logging.getLogger("ffcx")
 
 
-def generator(ir, options):
+def generator(ir, options, ir_elements):
     logger.info("Generating code for integral:")
     logger.info(f"--- type: {ir.integral_type}")
     logger.info(f"--- name: {ir.name}")
@@ -40,7 +40,7 @@ def generator(ir, options):
     ig = IntegralGenerator(ir, backend)
 
     # Generate code ast for the tabulate_tensor body
-    parts = ig.generate()
+    parts = ig.generate(ir_elements)
 
     # Format code as string
     body = format_indented_lines(parts.cs_format(ir.precision), 1)
@@ -163,7 +163,7 @@ class IntegralGenerator(object):
             self.shared_symbols[key] = s
         return s, defined
 
-    def generate(self):
+    def generate(self, ir_elements):
         """Generate entire tabulate_tensor body.
 
         Assumes that the code returned from here will be wrapped in a
@@ -192,7 +192,7 @@ class IntegralGenerator(object):
 
         # Generate the tables of basis function values and
         # pre-integrated blocks
-        parts += self.generate_element_tables(value_type)
+        parts += self.generate_element_tables(value_type, ir_elements)
 
         # Generate the tables of geometry data that are needed
         parts += self.generate_geometry_tables(value_type)
@@ -232,22 +232,31 @@ class IntegralGenerator(object):
 
         parts: List[str] = []
 
-        # No quadrature tables for custom (given argument) or point
-        # (evaluation in single vertex)
-        skip = ufl.custom_integral_types + ufl.measure.point_integral_types
-        if self.ir.integral_type in skip:
-            return parts
+        # # No quadrature tables for custom (given argument) or point
+        # # (evaluation in single vertex)
+        # skip = ufl.custom_integral_types + ufl.measure.point_integral_types
+        # if self.ir.integral_type in skip:
+        #     return parts
 
         padlen = self.ir.options["padlen"]
 
         # Loop over quadrature rules
-        for quadrature_rule, integrand in self.ir.integrand.items():
-            num_points = quadrature_rule.weights.shape[0]
+        if self.ir.integral_type == "custom":
+            assert len(self.ir.integrand.items()) == 1
+            for quadrature_rule, integrand in self.ir.integrand.items():
+                # Use the same wsym
+                wsym = self.backend.symbols.weights_table(quadrature_rule)
+                qrwsym = self.backend.symbols.custom_quadrature_weights()
+                parts += [L.VariableDecl("const double*", wsym, qrwsym)]
 
-            # Generate quadrature weights array
-            wsym = self.backend.symbols.weights_table(quadrature_rule)
-            parts += [L.ArrayDecl(f"static const {value_type}", wsym, num_points,
-                                  quadrature_rule.weights, padlen=padlen)]
+        else:
+            for quadrature_rule, integrand in self.ir.integrand.items():
+                num_points = quadrature_rule.weights.shape[0]
+
+                # Generate quadrature weights array
+                wsym = self.backend.symbols.weights_table(quadrature_rule)
+                parts += [L.ArrayDecl(f"static const {value_type}", wsym, num_points,
+                                      quadrature_rule.weights, padlen=padlen)]
 
         # Add leading comment if there are any tables
         parts = L.commented_code_list(parts, "Quadrature rules")
@@ -284,7 +293,7 @@ class IntegralGenerator(object):
 
         return parts
 
-    def generate_element_tables(self, float_type: str):
+    def generate_element_tables(self, float_type: str, ir_elements):
         """Generate static tables with precomputed element basisfunction values in quadrature points."""
         L = self.backend.language
         parts = []
@@ -298,9 +307,47 @@ class IntegralGenerator(object):
             # Define all tables
             table_names = sorted(tables)
 
-        for name in table_names:
-            table = tables[name]
-            parts += self.declare_table(name, table, padlen, float_type)
+        if self.ir.integral_type == "custom":
+            # Only declare
+            for name in table_names:
+                parts += [L.VerbatimStatement(f"{float_type}**** {name};")]
+        else:
+            for name in table_names:
+                table = tables[name]
+                parts += self.declare_table(name, table, padlen, float_type)
+
+        # Call basix
+        if self.ir.integral_type == "custom":
+            # Comment
+            parts += [L.VerbatimStatement("// Compute basis and/or derivatives using basix")]
+
+            # Compute using basix
+            for name in table_names:
+                if name.count("_") == 2:
+                    # Basis only
+                    nd = 0
+                else:
+                # FIXME Do something better than this hack (see generate_psi_table_name)
+                    if "_D10_" in name:
+                        # x derivative
+                        nd = 1
+                    elif "_D01_" in name:
+                        # y derivative
+                        nd = 2
+                    elif "_D100_" in name:
+                        nd = 1
+                    elif "_D010_" in name:
+                        nd = 2
+                    elif "_D001_" in name:
+                        nd = 3
+                    else:
+                        raise RuntimeError(f"Couldn't get derivative (name = {name})")
+                family = ir_elements[0].basix_family.value
+                cell_type = ir_elements[0].basix_cell.value
+                degree = ir_elements[0].degree
+                lattice_type = 0 # ir_elements[0].lattice_type.value
+                gdim = self.ir.geometric_dimension
+                parts += [L.VerbatimStatement(f"call_basix(&{name}, num_quadrature_points, quadrature_points, {nd}, {family}, {cell_type}, {degree}, {lattice_type}, {gdim});")]
 
         # Add leading comment if there are any tables
         parts = L.commented_code_list(parts, [
@@ -572,13 +619,14 @@ class IntegralGenerator(object):
             v = F.nodes[factor_index]['expression']
             f = self.get_var(quadrature_rule, v)
 
+            # FIXME
             # Quadrature weight was removed in representation, add it back now
-            if self.ir.integral_type in ufl.custom_integral_types:
-                weights = self.backend.symbols.custom_weights_table()
-                weight = weights[iq]
-            else:
-                weights = self.backend.symbols.weights_table(quadrature_rule)
-                weight = weights[iq]
+            # if self.ir.integral_type in ufl.custom_integral_types:
+            #     weights = self.backend.symbols.custom_weights_table()
+            #     weight = weights[iq]
+            # else:
+            weights = self.backend.symbols.weights_table(quadrature_rule)
+            weight = weights[iq]
 
             # Define fw = f * weight
             fw_rhs = L.float_product([f, weight])
