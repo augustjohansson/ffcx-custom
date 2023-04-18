@@ -214,7 +214,12 @@ def _analyze_form(form: ufl.form.Form, options: typing.Dict) -> ufl.algorithms.f
 
         for i, integral in enumerate(integral_data.integrals):
             metadata = integral.metadata()
-            if custom_q is None:
+
+            if metadata["quadrature_rule"] == "runtime":
+                # We must have integral_type = cell to not have to
+                # change dolfinx. How to store
+                integral_data.integral_type = "cell"
+            elif custom_q is None:
                 # Extract quadrature degree
                 qd_metadata = integral.metadata().get("quadrature_degree", qd_default)
                 pd_estimated = numpy.max(integral.metadata()["estimated_polynomial_degree"])
@@ -237,10 +242,6 @@ def _analyze_form(form: ufl.form.Form, options: typing.Dict) -> ufl.algorithms.f
                                  "quadrature_rule": "custom", "precision": p})
 
             integral_data.integrals[i] = integral.reconstruct(metadata=metadata)
-
-            # Set integral_type to runtime
-            if metadata["quadrature_rule"] == "runtime":
-                integral_data.integral_type = "runtime"
 
     return form_data
 

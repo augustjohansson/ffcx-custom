@@ -403,14 +403,13 @@ def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
 
             elif scheme == "runtime":
                 # Dummy quadrature
-                # points = numpy.array([[123.456, 123.456]])
-                # weights = numpy.array([123.456])
+                points = numpy.array([[123.456, 123.456]])
+                weights = numpy.array([123.456])
                 # points = numpy.array([[123.456, 123.456], [123.456, 123.456]])
                 # weights = numpy.array([123.456, 123.456])
-                degree = md["quadrature_degree"]
-                points, weights = create_quadrature_points_and_weights(
-                    integral_type, cell, degree, scheme)
-
+                # degree = 1
+                # points, weights = create_quadrature_points_and_weights(
+                #     integral_type, cell, degree, scheme)
 
             elif scheme == "vertex":
                 # FIXME: Could this come from basix?

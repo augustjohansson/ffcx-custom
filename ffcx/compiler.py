@@ -78,10 +78,13 @@ logger = logging.getLogger("ffcx")
 def _print_timing(stage: int, timing: float):
     logger.info(f"Compiler stage {stage} finished in {timing:.4f} seconds.")
 
-def _has_runtime_qr(ir):
-    for integral in ir.integrals:
-        if integral.integral_type is "runtime":
-            return True
+def _has_runtime_qr(analysis):
+    for fd in analysis.form_data:
+        for idata in fd.integral_data:
+            for integral in idata.integrals:
+                md = integral.metadata()
+                if md["quadrature_rule"] == "runtime":
+                    return True
     return False
 
 def compile_ufl_objects(ufl_objects: typing.List[typing.Any],
@@ -113,7 +116,7 @@ def compile_ufl_objects(ufl_objects: typing.List[typing.Any],
     _print_timing(3, time() - cpu_time)
 
     # Stage 4: format code
-    has_runtime_qr = _has_runtime_qr(ir)
+    has_runtime_qr = _has_runtime_qr(analysis)
     cpu_time = time()
     code_h, code_c = format_code(code, options, has_runtime_qr)
     _print_timing(4, time() - cpu_time)
