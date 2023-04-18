@@ -42,6 +42,8 @@ UFC_INTEGRAL_DECL += '\n'.join(re.findall(r'typedef void ?\(ufcx_tabulate_tensor
                                ufcx_h, re.DOTALL))
 UFC_INTEGRAL_DECL += '\n'.join(re.findall(r'typedef void ?\(ufcx_tabulate_tensor_longdouble\).*?\);',
                                ufcx_h, re.DOTALL))
+UFC_INTEGRAL_DECL += '\n'.join(re.findall(r'typedef void ?\(ufcx_tabulate_tensor_runtime_float64\).*?\);',
+                               ufcx_h, re.DOTALL))
 
 UFC_INTEGRAL_DECL += '\n'.join(re.findall('typedef struct ufcx_integral.*?ufcx_integral;',
                                           ufcx_h, re.DOTALL))
@@ -159,6 +161,13 @@ def compile_forms(forms, options=None, cache_dir=None, timeout=10, cffi_extra_co
                   cffi_verbose=False, cffi_debug=None, cffi_libraries=None):
     """Compile a list of UFL forms into UFC Python objects."""
     p = ffcx.options.get_options(options)
+
+    # FIXME put this in dolfinx_jit_options.json file (see jit.py in dolfinx). Where change to c++ compiler?
+    cffi_extra_compile_args=["-std=c++20"]
+    cffi_verbose=True
+    cffi_debug=True
+    cffi_libraries=["basix"]
+
 
     # Get a signature for these forms
     module_name = 'libffcx_forms_' + \
