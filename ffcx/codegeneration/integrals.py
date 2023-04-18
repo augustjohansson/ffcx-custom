@@ -71,7 +71,11 @@ def generator(ir, options, ir_elements):
     if options["tabulate_tensor_void"]:
         code["tabulate_tensor"] = ""
 
-    implementation = ufcx_integrals.factory.format(
+    if ir.integral_type == "runtime":
+        factory = ufcx_integrals.factory_runtime
+    else:
+        factory = ufcx_integrals.factory
+    implementation = factory.format(
         factory_name=factory_name,
         enabled_coefficients=code["enabled_coefficients"],
         enabled_coefficients_init=code["enabled_coefficients_init"],

@@ -316,6 +316,20 @@ extern "C"
       const int* restrict entity_local_index,
       const uint8_t* restrict quadrature_permutation);
 
+  // Runtime, custom quadrature
+  typedef void(ufcx_tabulate_tensor_runtime_float64)(
+      double* restrict A,
+      const double* restrict w,
+      const double* restrict c,
+      const double* restrict coordinate_dofs,
+      const int* restrict entity_local_index,
+      const uint8_t* restrict quadrature_permutation,
+      int num_quadrature_points,
+      const double* restrict quadrature_points,
+      const double* restrict quadrature_weights,
+      const double* restrict facet_normals);
+
+
   typedef struct ufcx_integral
   {
     const bool* enabled_coefficients;
@@ -324,6 +338,7 @@ extern "C"
     ufcx_tabulate_tensor_longdouble* tabulate_tensor_longdouble;
     ufcx_tabulate_tensor_complex64* tabulate_tensor_complex64;
     ufcx_tabulate_tensor_complex128* tabulate_tensor_complex128;
+    ufcx_tabulate_tensor_runtime_float64* tabulate_tensor_runtime_float64;
     bool needs_facet_permutations;
 
     /// Get the coordinate element associated with the geometry of the mesh.
@@ -344,6 +359,7 @@ extern "C"
     ufcx_tabulate_tensor_longdouble* tabulate_tensor_longdouble;
     ufcx_tabulate_tensor_complex64* tabulate_tensor_complex64;
     ufcx_tabulate_tensor_complex128* tabulate_tensor_complex128;
+    ufcx_tabulate_tensor_runtime_float64* tabulate_tensor_runtime_float64;
 
     /// Number of coefficients
     int num_coefficients;

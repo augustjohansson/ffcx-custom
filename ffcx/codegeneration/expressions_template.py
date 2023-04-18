@@ -17,12 +17,12 @@ extern ufcx_expression* {name_from_uflfile};
 factory = """
 // Code for expression {factory_name}
 
-void tabulate_tensor_{factory_name}({scalar_type}* restrict A,
-                                    const {scalar_type}* restrict w,
-                                    const {scalar_type}* restrict c,
-                                    const {geom_type}* restrict coordinate_dofs,
-                                    const int* restrict entity_local_index,
-                                    const uint8_t* restrict quadrature_permutation)
+void tabulate_tensor_{factory_name}({scalar_type}*  A,
+                                    const {scalar_type}*  w,
+                                    const {scalar_type}*  c,
+                                    const {geom_type}*  coordinate_dofs,
+                                    const int*  entity_local_index,
+                                    const uint8_t*  quadrature_permutation)
 {{
 {tabulate_expression}
 }}

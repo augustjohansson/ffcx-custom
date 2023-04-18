@@ -12,12 +12,12 @@ factory = """
 
 {sub_dofmaps_initialization}
 
-void tabulate_entity_dofs_{factory_name}(int* restrict dofs, int d, int i)
+void tabulate_entity_dofs_{factory_name}(int*  dofs, int d, int i)
 {{
 {tabulate_entity_dofs}
 }}
 
-void tabulate_entity_closure_dofs_{factory_name}(int* restrict dofs, int d, int i)
+void tabulate_entity_closure_dofs_{factory_name}(int*  dofs, int d, int i)
 {{
 {tabulate_entity_closure_dofs}
 }}
