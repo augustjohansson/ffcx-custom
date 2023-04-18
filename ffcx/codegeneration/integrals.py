@@ -349,7 +349,7 @@ class IntegralGenerator(object):
                 family = ir_elements[0].basix_family.value
                 cell_type = ir_elements[0].basix_cell.value
                 degree = ir_elements[0].degree
-                lattice_type = 0 # ir_elements[0].lattice_type.value
+                lattice_type = 0 # equispaced (see element-families.h)
                 gdim = self.ir.geometric_dimension
                 parts += [L.VerbatimStatement(f"call_basix(&{name}, num_quadrature_points, quadrature_points, {nd}, {family}, {cell_type}, {degree}, {lattice_type}, {gdim});")]
 
