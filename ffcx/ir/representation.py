@@ -135,6 +135,7 @@ class IntegralIR(typing.NamedTuple):
     precision: int
     needs_facet_permutations: bool
     coordinate_element: str
+    has_runtime_qr: bool
 
 
 class ExpressionIR(typing.NamedTuple):
@@ -335,8 +336,7 @@ def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
         "exterior_facet": "facet",
         "interior_facet": "facet",
         "vertex": "vertex",
-        "custom": "cell",
-        "runtime": "cell"
+        "custom": "cell"
     }
 
     # Iterate over groups of integrals
@@ -363,7 +363,8 @@ def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
             "num_vertices": cell.num_vertices(),
             "enabled_coefficients": itg_data.enabled_coefficients,
             "cell_shape": cellname,
-            "coordinate_element": finite_element_names[convert_element(itg_data.domain.ufl_coordinate_element())]
+            "coordinate_element": finite_element_names[convert_element(itg_data.domain.ufl_coordinate_element())],
+            "has_runtime_qr": False
         }
 
         # Get element space dimensions
@@ -402,6 +403,7 @@ def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
                 weights = md["quadrature_weights"]
 
             elif scheme == "runtime":
+                ir["has_runtime_qr"] = True
                 # Dummy quadrature
                 points = numpy.array([[123.456, 123.456]])
                 weights = numpy.array([123.456])

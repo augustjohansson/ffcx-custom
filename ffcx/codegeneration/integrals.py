@@ -71,7 +71,7 @@ def generator(ir, options, ir_elements):
     if options["tabulate_tensor_void"]:
         code["tabulate_tensor"] = ""
 
-    if ir.integral_type == "runtime":
+    if ir.has_runtime_qr:
         factory = ufcx_integrals.factory_runtime
     else:
         factory = ufcx_integrals.factory
@@ -245,7 +245,7 @@ class IntegralGenerator(object):
         padlen = self.ir.options["padlen"]
 
         # Loop over quadrature rules
-        if self.ir.integral_type == "runtime":
+        if self.ir.has_runtime_qr:
             # For debugging, include also the non-runtime wsym
             assert len(self.ir.integrand.items()) == 1
             for quadrature_rule, integrand in self.ir.integrand.items():
@@ -311,7 +311,7 @@ class IntegralGenerator(object):
             # Define all tables
             table_names = sorted(tables)
 
-        if self.ir.integral_type == "runtime":
+        if self.ir.has_runtime_qr:
             # Only declare  (for debugging include both runtime and non-runtime)
             for name in table_names:
                 parts += [L.VerbatimStatement(f"{float_type}**** {name};")]
@@ -321,7 +321,7 @@ class IntegralGenerator(object):
                 parts += self.declare_table(name, table, padlen, float_type)
 
         # Call basix
-        if self.ir.integral_type == "runtime":
+        if self.ir.has_runtime_qr:
             # Comment
             parts += [L.VerbatimStatement("// Compute basis and/or derivatives using basix")]
 
@@ -390,7 +390,8 @@ class IntegralGenerator(object):
         else:
             num_points = quadrature_rule.points.shape[0]
             iq = self.backend.symbols.quadrature_loop_index()
-            if self.ir.integral_type == "runtime":
+
+            if self.ir.has_runtime_qr:
                 # FIXME This requires removal of RuntimeError in cnodes
                 quadparts = [L.ForRange(iq, 0, "num_quadrature_points", body=body)]
             else:

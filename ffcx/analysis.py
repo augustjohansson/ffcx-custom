@@ -215,7 +215,7 @@ def _analyze_form(form: ufl.form.Form, options: typing.Dict) -> ufl.algorithms.f
         for i, integral in enumerate(integral_data.integrals):
             metadata = integral.metadata()
 
-            if metadata["quadrature_rule"] == "runtime":
+            if "quadrature_rule" in metadata and metadata["quadrature_rule"] == "runtime":
                 # We must have integral_type = cell to not have to
                 # change dolfinx. How to store
                 integral_data.integral_type = "cell"
