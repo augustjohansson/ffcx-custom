@@ -246,7 +246,7 @@ class IntegralGenerator(object):
 
         # Loop over quadrature rules
         if self.ir.has_runtime_qr:
-            # For debugging, include also the non-runtime wsym
+            # For debugging weights, include also the non-runtime wsym
             assert len(self.ir.integrand.items()) == 1
             for quadrature_rule, integrand in self.ir.integrand.items():
                 # Use the same wsym
@@ -312,7 +312,7 @@ class IntegralGenerator(object):
             table_names = sorted(tables)
 
         if self.ir.has_runtime_qr:
-            # Only declare  (for debugging include both runtime and non-runtime)
+            # Only declare. For debugging, also include the non-runtime basis
             for name in table_names:
                 parts += [L.VerbatimStatement(f"{float_type}**** {name};")]
         else:
