@@ -346,9 +346,18 @@ class IntegralGenerator(object):
                         nd = 3
                     else:
                         raise RuntimeError(f"Couldn't get derivative (name = {name})")
-                family = ir_elements[0].basix_family.value
-                cell_type = ir_elements[0].basix_cell.value
-                degree = ir_elements[0].degree
+                # FIXME Which ir_elements should we pick data from?
+                # Just take the one with highest degree...
+                ir_idx = -1
+                max_degree = -1
+                for k, ir_element in enumerate(ir_elements):
+                    if ir_element.degree > max_degree:
+                        ir_idx = k
+                        max_degree = ir_element.degree
+
+                family = ir_elements[ir_idx].basix_family.value
+                cell_type = ir_elements[ir_idx].basix_cell.value
+                degree = max_degree
                 lattice_type = 0 # equispaced (see element-families.h)
                 gdim = self.ir.geometric_dimension
                 parts += [L.VerbatimStatement(f"call_basix(&{name}, num_quadrature_points, quadrature_points, {nd}, {family}, {cell_type}, {degree}, {lattice_type}, {gdim});")]
