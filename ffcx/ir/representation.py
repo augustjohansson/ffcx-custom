@@ -200,7 +200,7 @@ def compute_ir(analysis: UFLData, object_names, prefix, options, visualise):
 
     irs = [
         _compute_integral_ir(fd, i, analysis.element_numbers, integral_names, finite_element_names,
-                             options, visualise, ir_elements)
+                             options, visualise)
         for (i, fd) in enumerate(analysis.form_data)
     ]
     ir_integrals = list(itertools.chain(*irs))
@@ -329,7 +329,7 @@ def _compute_dofmap_ir(element, element_numbers, dofmap_names):
 
 
 def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
-                         finite_element_names, options, visualise, ir_elements):
+                         finite_element_names, options, visualise):
     """Compute intermediate representation for form integrals."""
     _entity_types = {
         "cell": "cell",
@@ -363,8 +363,7 @@ def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
             "num_vertices": cell.num_vertices(),
             "enabled_coefficients": itg_data.enabled_coefficients,
             "cell_shape": cellname,
-            "coordinate_element": finite_element_names[convert_element(itg_data.domain.ufl_coordinate_element())],
-            "has_runtime_qr": False
+            "coordinate_element": finite_element_names[convert_element(itg_data.domain.ufl_coordinate_element())]
         }
 
         # Get element space dimensions
