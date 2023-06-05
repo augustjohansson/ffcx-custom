@@ -363,7 +363,8 @@ def _compute_integral_ir(form_data, form_index, element_numbers, integral_names,
             "num_vertices": cell.num_vertices(),
             "enabled_coefficients": itg_data.enabled_coefficients,
             "cell_shape": cellname,
-            "coordinate_element": finite_element_names[convert_element(itg_data.domain.ufl_coordinate_element())]
+            "coordinate_element": finite_element_names[convert_element(itg_data.domain.ufl_coordinate_element())],
+            "has_runtime_qr": False
         }
 
         # Get element space dimensions
