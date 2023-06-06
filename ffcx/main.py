@@ -23,10 +23,16 @@ from ffcx.options import FFCX_DEFAULT_OPTIONS, get_options
 logger = logging.getLogger("ffcx")
 
 parser = argparse.ArgumentParser(
-    description="FEniCS Form Compiler (FFCx, https://fenicsproject.org)")
+    description="FEniCS Form Compiler for runtime quadrature (FFCx, https://fenicsproject.org)"
+)
 parser.add_argument(
-    "--version", action='version', version=f"%(prog)s (version {FFCX_VERSION})")
-parser.add_argument("-o", "--output-directory", type=str, default=".", help="output directory")
+    "--version",
+    action="version",
+    version=f"%(prog)s with runtime quadrature (version {FFCX_VERSION})",
+)
+parser.add_argument(
+    "-o", "--output-directory", type=str, default=".", help="output directory"
+)
 parser.add_argument("--visualise", action="store_true", help="visualise the IR graph")
 parser.add_argument("-p", "--profile", action='store_true', help="enable profiling")
 
