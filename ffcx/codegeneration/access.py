@@ -26,6 +26,8 @@ class FFCXBackendAccess(object):
         self.language = language
         self.symbols = symbols
         self.options = options
+        self.has_runtime_qr = ir.has_runtime_qr
+
 
         # Lookup table for handler to call when the "get" method (below) is
         # called, depending on the first argument type.
@@ -195,13 +197,20 @@ class FFCXBackendAccess(object):
 
     def reference_normal(self, e, mt, tabledata, access):
         L = self.language
-        cellname = ufl.domain.extract_unique_domain(mt.terminal).ufl_cell().cellname()
-        if cellname in ("interval", "triangle", "tetrahedron", "quadrilateral", "hexahedron"):
-            table = L.Symbol(f"{cellname}_reference_facet_normals")
-            facet = self.symbols.entity("facet", mt.restriction)
-            return table[facet][mt.component[0]]
+        if self.has_runtime_qr:
+            table = L.Symbol("quadrature_normals")
+            iq = self.symbols.quadrature_loop_index()
+            gdim, = mt.terminal.ufl_shape
+            idx = iq * gdim + mt.component[0]
+            return table[idx]
         else:
-            raise RuntimeError(f"Unhandled cell types {cellname}.")
+            cellname = ufl.domain.extract_unique_domain(mt.terminal).ufl_cell().cellname()
+            if cellname in ("interval", "triangle", "tetrahedron", "quadrilateral", "hexahedron"):
+                table = L.Symbol(f"{cellname}_reference_facet_normals")
+                facet = self.symbols.entity("facet", mt.restriction)
+                return table[facet][mt.component[0]]
+            else:
+                raise RuntimeError(f"Unhandled cell types {cellname}.")
 
     def cell_facet_jacobian(self, e, mt, tabledata, num_points):
         L = self.language

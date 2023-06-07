@@ -75,6 +75,7 @@ def generator(ir, options, ir_elements):
         factory = ufcx_integrals.factory_runtime
     else:
         factory = ufcx_integrals.factory
+
     implementation = factory.format(
         factory_name=factory_name,
         enabled_coefficients=code["enabled_coefficients"],
@@ -270,20 +271,20 @@ class IntegralGenerator(object):
         """Generate static tables of geometry data."""
         L = self.backend.language
 
-        if self.ir.has_runtime_qr:
-            ufl_geometry = {
-                ufl.geometry.FacetEdgeVectors: "facet_edge_vertices",
-                ufl.geometry.CellFacetJacobian: "reference_facet_jacobian",
-                ufl.geometry.ReferenceCellVolume: "reference_cell_volume",
-                ufl.geometry.ReferenceFacetVolume: "reference_facet_volume",
-                ufl.geometry.ReferenceCellEdgeVectors: "reference_edge_vectors",
-                ufl.geometry.ReferenceFacetEdgeVectors: "facet_reference_edge_vectors",
-                # ufl.geometry.ReferenceNormal: "reference_facet_normals",
-                ufl.geometry.FacetOrientation: "facet_orientation"
-            }
-        else:
+        ufl_geometry = {
+            ufl.geometry.FacetEdgeVectors: "facet_edge_vertices",
+            ufl.geometry.CellFacetJacobian: "reference_facet_jacobian",
+            ufl.geometry.ReferenceCellVolume: "reference_cell_volume",
+            ufl.geometry.ReferenceFacetVolume: "reference_facet_volume",
+            ufl.geometry.ReferenceCellEdgeVectors: "reference_edge_vectors",
+            ufl.geometry.ReferenceFacetEdgeVectors: "facet_reference_edge_vectors",
+            # ufl.geometry.ReferenceNormal: "reference_facet_normals",
+            ufl.geometry.FacetOrientation: "facet_orientation"
+        }
+        if not self.ir.has_runtime_qr:
+            # Include reference facet normals if we don't have runtime qr
             ufl_geometry[ufl.geometry.ReferenceNormal] = "reference_facet_normals"
-            
+
         cells: Dict[Any, Set[Any]] = {t: set() for t in ufl_geometry.keys()}
 
         for integrand in self.ir.integrand.values():
@@ -387,7 +388,7 @@ class IntegralGenerator(object):
         L = self.backend.language
         # Generate varying partition
         pre_definitions, body = self.generate_varying_partition(quadrature_rule)
-
+        breakpoint()
         body = L.commented_code_list(body, f"Quadrature loop body setup for quadrature rule {quadrature_rule.id()}")
 
         # Generate dofblock parts, some of this will be placed before or
