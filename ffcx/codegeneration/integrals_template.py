@@ -45,7 +45,7 @@ void tabulate_tensor_{factory_name}({scalar_type}* A,
                                     int num_quadrature_points,
                                     const {scalar_type}* quadrature_points,
                                     const {scalar_type}* quadrature_weights,
-                                    const {scalar_type}* facet_normals)
+                                    const {scalar_type}* quadrature_normals)
 {{
 {tabulate_tensor}
 }}
