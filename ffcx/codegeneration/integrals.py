@@ -270,16 +270,20 @@ class IntegralGenerator(object):
         """Generate static tables of geometry data."""
         L = self.backend.language
 
-        ufl_geometry = {
-            ufl.geometry.FacetEdgeVectors: "facet_edge_vertices",
-            ufl.geometry.CellFacetJacobian: "reference_facet_jacobian",
-            ufl.geometry.ReferenceCellVolume: "reference_cell_volume",
-            ufl.geometry.ReferenceFacetVolume: "reference_facet_volume",
-            ufl.geometry.ReferenceCellEdgeVectors: "reference_edge_vectors",
-            ufl.geometry.ReferenceFacetEdgeVectors: "facet_reference_edge_vectors",
-            ufl.geometry.ReferenceNormal: "reference_facet_normals",
-            ufl.geometry.FacetOrientation: "facet_orientation"
-        }
+        if self.ir.has_runtime_qr:
+            ufl_geometry = {
+                ufl.geometry.FacetEdgeVectors: "facet_edge_vertices",
+                ufl.geometry.CellFacetJacobian: "reference_facet_jacobian",
+                ufl.geometry.ReferenceCellVolume: "reference_cell_volume",
+                ufl.geometry.ReferenceFacetVolume: "reference_facet_volume",
+                ufl.geometry.ReferenceCellEdgeVectors: "reference_edge_vectors",
+                ufl.geometry.ReferenceFacetEdgeVectors: "facet_reference_edge_vectors",
+                # ufl.geometry.ReferenceNormal: "reference_facet_normals",
+                ufl.geometry.FacetOrientation: "facet_orientation"
+            }
+        else:
+            ufl_geometry[ufl.geometry.ReferenceNormal] = "reference_facet_normals"
+            
         cells: Dict[Any, Set[Any]] = {t: set() for t in ufl_geometry.keys()}
 
         for integrand in self.ir.integrand.values():
