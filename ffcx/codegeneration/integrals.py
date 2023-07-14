@@ -388,7 +388,7 @@ class IntegralGenerator(object):
         L = self.backend.language
         # Generate varying partition
         pre_definitions, body = self.generate_varying_partition(quadrature_rule)
-        breakpoint()
+
         body = L.commented_code_list(body, f"Quadrature loop body setup for quadrature rule {quadrature_rule.id()}")
 
         # Generate dofblock parts, some of this will be placed before or
